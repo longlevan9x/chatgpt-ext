@@ -1,12 +1,50 @@
+console.log = function(){};
+console.error = function(){};
+
+const FROM = {
+    EXT_CONT: "EXT_CONT",
+};
+
+const origins = [
+    'http://localhost:4200',
+    'http://pika2024.vercel.app'
+];
+
+let tabHistory = [];
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+    if (tabHistory.length > 0 && tabHistory[tabHistory.length - 1] !== activeInfo.tabId) {
+        tabHistory.push(activeInfo.tabId);
+    } else if (tabHistory.length === 0) {
+        tabHistory.push(activeInfo.tabId);
+    }
+
+    if (tabHistory.length > 4) {
+        tabHistory.shift();
+    }
+});
+
+function backToPreviousTab() {
+    if (tabHistory[tabHistory.length - 2]) {
+        chrome.tabs.update(tabHistory[tabHistory.length - 2], { active: true }, () => { });
+    }
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log("message, sender", message, sender)
+    console.log("message", message);
+    if (!origins.includes(sender.origin)) {
+        return true;
+    }
+
+    if (message.from !== FROM.EXT_CONT) {
+        return true;
+    }
+
     if (message.action === 'startChatGPTInteraction') {
-        // Create a new tab or find an existing one
         chrome.tabs.query({ url: 'https://chatgpt.com/*' }, (tabs) => {
             let tab = tabs[0];
             if (tab) {
-                // Tab already exists
-                chrome.tabs.update(tab.id, { }, () => {
+                chrome.tabs.update(tab.id, { active: true }, () => {
                     chrome.scripting.executeScript(
                         {
                             target: { tabId: tab.id },
@@ -15,11 +53,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         },
                         (results) => {
                             handleScriptResults(results, sendResponse);
+                            backToPreviousTab();
                         }
                     );
                 });
             } else {
-                // Create a new tab
                 chrome.tabs.create({ url: 'https://chatgpt.com/' }, (tab) => {
                     const tabId = tab.id;
 
@@ -33,6 +71,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 },
                                 (results) => {
                                     handleScriptResults(results, sendResponse);
+                                    backToPreviousTab();
                                 }
                             );
                             chrome.tabs.onUpdated.removeListener(listener);
@@ -46,17 +85,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 function handleScriptResults(results, sendResponse) {
-    console.log("results", results);
+    console.log("handleScriptResults results", results);
     if (chrome.runtime.lastError) {
         console.error('Script injection error:', chrome.runtime.lastError);
-        sendResponse('Script injection error');
+        sendResponse('Script injection error: ');
     } else if (results && results[0] && results[0].result) {
         sendResponse(results[0].result);
     } else {
         sendResponse('No response received from ChatGPT.');
     }
 }
-
 
 function interactWithChatGPT(prompt) {
     console.log('interactWithChatGPT function is running'); // Debug log
@@ -85,31 +123,28 @@ function interactWithChatGPT(prompt) {
         const waitForCompleteResponse = (responseElement) => {
             return new Promise((resolve, reject) => {
                 const initialText = responseElement.innerText;
-                let i = 1;
+                let checkCount = 1;
 
-                console.log(i, initialText)
+                // console.log(checkCount, initialText)
                 const checkComplete = setInterval(() => {
                     const currentText = responseElement.innerText;
-                    console.log(i, currentText);
-                    i++;
-                    chrome.runtime.sendMessage({ a: currentText, action: "message" })
+                    // console.log(checkCount, currentText);
+
+                    // chrome.runtime.sendMessage({ message: currentText, type: "FROM_CHATGPT" });
+
+                    // Assuming that once the text stops changing, the response is complete
                     if (currentText !== initialText) {
-                        // Assuming that once the text stops changing, the response is complete
                         clearInterval(checkComplete);
                         resolve(currentText);
                     }
 
-                    if (i === 30) {
+                    if (checkCount === 30) {
                         clearInterval(checkComplete);
                         reject('Response timed out.');
                     }
-                }, 1000);
 
-                // Timeout if the response takes too long
-                // setTimeout(() => {
-                //     clearInterval(checkComplete);
-                //     reject('Response timed out.');
-                // }, 10000); // 30 seconds timeout for complete response
+                    checkCount++;
+                }, 1000);
             });
         };
 
