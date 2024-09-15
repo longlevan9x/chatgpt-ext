@@ -1,0 +1,32 @@
+{
+    "manifest_version": 3,
+    "name": "ChatGPT Web Data Extension",
+    "version": "1.0",
+    "description": "Send data from websites to ChatGPT and get responses.",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage",
+        "tabs"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "host_permissions": [
+        "*://chat.openai.com/*",
+        "*://chatgpt.com/*"
+    ]
+}
