@@ -2,7 +2,8 @@ console.log('Content script loaded');
 
 const FROM = {
     EXTENSION: "EXTENSION",
-    WEBPAGE: "WEBPAGE"
+    WEBPAGE: "WEBPAGE",
+    CHATGPT: "CHATGPT"
 };
 
 const origins = [
@@ -15,7 +16,7 @@ window.addEventListener('message', (event) => {
     const origin = event.origin;
     console.log("content.js message event.data, origin", data);
 
-    if (data.from === FROM.EXTENSION) {
+    if (!data.from || data.from === FROM.EXTENSION || data.from === FROM.CHATGPT) {
         return;
     }
 

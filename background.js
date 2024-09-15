@@ -1,5 +1,5 @@
-console.log = function(){};
-console.error = function(){};
+// console.log = function(){};
+// console.error = function(){};
 
 const FROM = {
     EXT_CONT: "EXT_CONT",
@@ -122,20 +122,18 @@ function interactWithChatGPT(prompt) {
 
         const waitForCompleteResponse = (responseElement) => {
             return new Promise((resolve, reject) => {
-                const initialText = responseElement.innerText;
+                let previousText = responseElement.innerText;
                 let checkCount = 1;
 
-                // console.log(checkCount, initialText)
                 const checkComplete = setInterval(() => {
                     const currentText = responseElement.innerText;
                     // console.log(checkCount, currentText);
-
-                    // chrome.runtime.sendMessage({ message: currentText, type: "FROM_CHATGPT" });
-
-                    // Assuming that once the text stops changing, the response is complete
-                    if (currentText !== initialText) {
+                    // chrome.runtime.sendMessage({ message: currentText, from: "CHATGPT", action: "ANSWER" });
+                    if (currentText !== previousText) {
+                        previousText = currentText; // Update previousText when change detected
+                    } else {
                         clearInterval(checkComplete);
-                        resolve(currentText);
+                        resolve(responseElement.innerHTML);
                     }
 
                     if (checkCount === 30) {
@@ -167,12 +165,14 @@ function interactWithChatGPT(prompt) {
                 // Wait for the response element and then for the complete response
                 return waitForElement(responseSelector)
                     .then((responseElement) => {
-                        console.log('Response element found'); // Debug log
+                        // Debug log
+                        console.log('Response element found'); 
                         return waitForCompleteResponse(responseElement);
                     });
             })
             .then((completeResponse) => {
-                console.log('Complete response received'); // Debug log
+                // Debug log
+                console.log('Complete response received'); 
                 resolve(completeResponse);
             })
             .catch((error) => {
