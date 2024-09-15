@@ -150,7 +150,7 @@ function interactWithChatGPT(prompt) {
             .then((inputField) => {
                 console.log('Input field found'); // Debug log
                 inputField.focus();
-                inputField.innerText = prompt;
+                inputField.innerHTML = prompt;
 
                 // Trigger input event
                 inputField.dispatchEvent(new Event('input', { bubbles: true }));

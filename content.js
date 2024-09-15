@@ -33,9 +33,9 @@ function handleMessageFromWebPage(data) {
     chrome.runtime?.sendMessage({ from: 'EXT_CONT', action: "startChatGPTInteraction", prompt: data.prompt }, (result) => {
         if (chrome.runtime.lastError) {
             console.error('Error:', chrome.runtime.lastError);
-            window.postMessage({ from: "EXTENSION", action: "ANSWER", result: "Error run time" }, '*');
+            window.postMessage({ from: "EXTENSION", action: "ERROR", result: "Error run time" }, '*');
         } else {
-            window.postMessage({ from: "EXTENSION", action: "ANSWER", result: result }, '*');
+            window.postMessage({ from: "EXTENSION", action: data.action, result: result }, '*');
         }
     });
 }
