@@ -30,7 +30,7 @@
         "*://chatgpt.com/*",
         "http://localhost:4200/*",
         "*://pika2024.vercel.app/*",
-        "https://*/*",
-        "http://*/*"
+        "https://pika2024.vercel.app/*",
+        "https://pika2024.vercel.app/"
     ]
 }

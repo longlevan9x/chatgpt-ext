@@ -7,7 +7,7 @@ const FROM = {
 
 const origins = [
     'http://localhost:4200',
-    'http://pika2024.vercel.app'
+    'https://pika2024.vercel.app'
 ];
 
 let tabHistory = [];
